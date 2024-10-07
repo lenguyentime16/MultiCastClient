@@ -76,7 +76,7 @@ public class ChatClient extends JFrame {
         }
 
         try {
-            socket = new Socket("localhost", 12345);
+            socket = new Socket("192.168.43.106", 12345);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -109,7 +109,8 @@ public class ChatClient extends JFrame {
     }
 
     private void joinGroup() {
-        String groupName = JOptionPane.showInputDialog(this, "Nhập tên nhóm để tham gia:", "Tham gia nhóm", JOptionPane.PLAIN_MESSAGE);
+        String groupName = JOptionPane.showInputDialog(this, "Nhập tên nhóm để tham gia:", "Tham gia nhóm",
+                JOptionPane.PLAIN_MESSAGE);
         if (groupName != null && !groupName.trim().isEmpty()) {
             out.println("JOIN:" + groupName.trim());
 
@@ -131,7 +132,8 @@ public class ChatClient extends JFrame {
         panel.add(new JLabel("Tin nhắn:"));
         panel.add(msgField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Gửi tin nhắn riêng tư", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Gửi tin nhắn riêng tư", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             String targetUser = userField.getText().trim();
             String privateMsg = msgField.getText().trim();
@@ -168,7 +170,11 @@ public class ChatClient extends JFrame {
             } catch (IOException ex) {
                 appendMessage("Đã ngắt kết nối với server.");
             } finally {
-                try { socket.close(); } catch (IOException e) { e.printStackTrace(); }
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -217,6 +223,50 @@ public class ChatClient extends JFrame {
         }
     }
 
+    // Lớp xử lý giao diện chat riêng
+    private class PrivateChatWindow extends JFrame {
+        private JTextArea privateMessageArea;
+        private JTextField privateInputField;
+        private JButton privateSendButton;
+        private String targetUser;
+
+        public PrivateChatWindow(String targetUser) {
+            this.targetUser = targetUser;
+            setTitle("Chat riêng với: " + targetUser);
+            setSize(400, 300);
+            setLocationRelativeTo(null);
+
+            privateMessageArea = new JTextArea();
+            privateMessageArea.setEditable(false);
+            JScrollPane scrollPane = new JScrollPane(privateMessageArea);
+
+            privateInputField = new JTextField();
+            privateSendButton = new JButton("Gửi");
+
+            JPanel inputPanel = new JPanel(new BorderLayout());
+            inputPanel.add(privateInputField, BorderLayout.CENTER);
+            inputPanel.add(privateSendButton, BorderLayout.EAST);
+
+            add(scrollPane, BorderLayout.CENTER);
+            add(inputPanel, BorderLayout.SOUTH);
+
+            privateSendButton.addActionListener(e -> sendPrivateMessage());
+            privateInputField.addActionListener(e -> sendPrivateMessage());
+        }
+
+        private void sendPrivateMessage() {
+            String message = privateInputField.getText().trim();
+            if (!message.isEmpty()) {
+                out.println("PRIVATE:" + targetUser + ":" + message);
+                privateInputField.setText("");
+            }
+        }
+
+        public void appendMessage(String message) {
+            SwingUtilities.invokeLater(() -> privateMessageArea.append(message + "\n"));
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             ChatClient client = new ChatClient();
@@ -224,6 +274,3 @@ public class ChatClient extends JFrame {
         });
     }
 }
-
-
-
