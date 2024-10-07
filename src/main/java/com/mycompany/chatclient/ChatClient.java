@@ -76,7 +76,7 @@ public class ChatClient extends JFrame {
         }
 
         try {
-            socket = new Socket("192.168.43.106", 12345);
+            socket = new Socket("localhost", 12345);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -148,36 +148,33 @@ public class ChatClient extends JFrame {
     }
 
     private class IncomingReader implements Runnable {
-        @Override
-        public void run() {
-            String message;
-            try {
-                while ((message = in.readLine()) != null) {
-                    if (message.startsWith("[Nhóm ")) {
-                        // Tin nhắn nhóm
-                        int groupNameStart = message.indexOf("[Nhóm ") + 6;
-                        int groupNameEnd = message.indexOf("]", groupNameStart);
-                        String groupName = message.substring(groupNameStart, groupNameEnd);
-                        GroupChatWindow groupWindow = groupChatWindows.get(groupName);
-                        if (groupWindow != null) {
-                            groupWindow.appendMessage(message);
-                        }
-                    } else {
-                        // Tin nhắn chung
-                        appendMessage(message);
+    @Override
+    public void run() {
+        String message;
+        try {
+            while ((message = in.readLine()) != null) {
+                if (message.startsWith("[Nhóm ")) {
+                    // Tin nhắn nhóm
+                    int groupNameStart = message.indexOf("[Nhóm ") + 6;
+                    int groupNameEnd = message.indexOf("]", groupNameStart);
+                    String groupName = message.substring(groupNameStart, groupNameEnd);
+                    GroupChatWindow groupWindow = groupChatWindows.get(groupName);
+                    if (groupWindow != null) {
+                        groupWindow.appendMessage(message); // Tin nhắn sẽ bao gồm cả địa chỉ IP
                     }
-                }
-            } catch (IOException ex) {
-                appendMessage("Đã ngắt kết nối với server.");
-            } finally {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } else {
+                    // Tin nhắn chung và tin nhắn riêng
+                    appendMessage(message); // Tin nhắn sẽ bao gồm cả địa chỉ IP
                 }
             }
+        } catch (IOException ex) {
+            appendMessage("Đã ngắt kết nối với server.");
+        } finally {
+            try { socket.close(); } catch (IOException e) { e.printStackTrace(); }
         }
     }
+}
+
 
     // Lớp xử lý giao diện chat nhóm
     private class GroupChatWindow extends JFrame {
